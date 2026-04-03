@@ -59,6 +59,22 @@ public class ServiceRequestController {
             return "Request not found";
         }
     }
+    @PutMapping("/update/{id}")
+    public ServiceRequest updateRequest(@PathVariable Long id, @RequestBody ServiceRequest updatedRequest) {
+        ServiceRequest existingRequest = repository.findById(id).orElse(null);
+
+        if (existingRequest != null) {
+            existingRequest.setServiceType(updatedRequest.getServiceType());
+            existingRequest.setLocation(updatedRequest.getLocation());
+            existingRequest.setLatitude(updatedRequest.getLatitude());
+            existingRequest.setLongitude(updatedRequest.getLongitude());
+            existingRequest.setStatus(updatedRequest.getStatus());
+
+            return repository.save(existingRequest);
+        }
+
+        return null;
+    }
 
     @PutMapping("/complete/{id}")
     public ServiceRequest completeRequest(@PathVariable Long id) {
