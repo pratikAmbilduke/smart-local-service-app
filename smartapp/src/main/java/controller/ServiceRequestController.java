@@ -7,6 +7,10 @@ import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
 import java.util.HashMap;
 import java.util.Map;
+import org.springframework.web.bind.annotation.RequestParam;
+import com.project.smartapp.dto.RequestProviderResponse;
+import com.project.smartapp.entity.Provider;
+import com.project.smartapp.repository.ProviderRepository;
 
 import java.util.List;
 
@@ -20,6 +24,9 @@ public class ServiceRequestController {
 
     @Autowired
     private SimpMessagingTemplate messagingTemplate;
+
+    @Autowired
+    private ProviderRepository providerRepository;
 
     @PostMapping("/create")
     public ServiceRequest createRequest(@RequestBody ServiceRequest request) {
@@ -40,13 +47,16 @@ public class ServiceRequestController {
     }
 
     @PutMapping("/accept/{id}")
-    public ServiceRequest acceptRequest(@PathVariable Long id) {
+    public ServiceRequest acceptRequest(@PathVariable Long id, @RequestParam Long providerId) {
         ServiceRequest request = repository.findById(id).orElse(null);
 
         if (request != null) {
             request.setStatus("ACCEPTED");
+            request.setProviderId(providerId);
             ServiceRequest updated = repository.save(request);
+
             messagingTemplate.convertAndSend("/topic/requests", updated);
+
             return updated;
         }
 
@@ -108,5 +118,21 @@ public class ServiceRequestController {
         counts.put("COMPLETED", repository.countByStatus("COMPLETED"));
 
         return counts;
+    }
+    @GetMapping("/details/{id}")
+    public RequestProviderResponse getRequestWithProvider(@PathVariable Long id) {
+        ServiceRequest request = repository.findById(id).orElse(null);
+
+        if (request == null) {
+            return null;
+        }
+
+        Provider provider = null;
+
+        if (request.getProviderId() != null) {
+            provider = providerRepository.findById(request.getProviderId()).orElse(null);
+        }
+
+        return new RequestProviderResponse(request, provider);
     }
 }

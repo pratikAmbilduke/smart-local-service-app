@@ -15,6 +15,7 @@ public class ServiceRequest {
     private String status;
     private Double latitude;
     private Double longitude;
+    private Long providerId;
 
     public ServiceRequest() {
     }
@@ -73,5 +74,12 @@ public class ServiceRequest {
 
     public void setLongitude(Double longitude) {
         this.longitude = longitude;
+    }
+    public Long getProviderId() {
+        return providerId;
+    }
+
+    public void setProviderId(Long providerId) {
+        this.providerId = providerId;
     }
 }
