@@ -9,4 +9,5 @@ public interface ServiceRequestRepository extends JpaRepository<ServiceRequest, 
 
     // ADD THIS METHOD
     List<ServiceRequest> findByStatus(String status);
+    List<ServiceRequest> findByLocation(String location);
 }
