@@ -5,6 +5,8 @@ import com.project.smartapp.repository.ServiceRequestRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.simp.SimpMessagingTemplate;
 import org.springframework.web.bind.annotation.*;
+import java.util.HashMap;
+import java.util.Map;
 
 import java.util.List;
 
@@ -96,5 +98,15 @@ public class ServiceRequestController {
     @GetMapping("/location/{location}")
     public List<ServiceRequest> getRequestsByLocation(@PathVariable String location) {
         return repository.findByLocation(location);
+    }
+    @GetMapping("/count")
+    public Map<String, Long> countRequestsByStatus() {
+        Map<String, Long> counts = new HashMap<>();
+
+        counts.put("PENDING", repository.countByStatus("PENDING"));
+        counts.put("ACCEPTED", repository.countByStatus("ACCEPTED"));
+        counts.put("COMPLETED", repository.countByStatus("COMPLETED"));
+
+        return counts;
     }
 }
