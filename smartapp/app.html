@@ -57,11 +57,51 @@
         .busy {
             background-color: #ffeaea;
         }
+
+        .dashboard {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .card {
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 12px;
+            min-width: 140px;
+            text-align: center;
+            background-color: #f9f9f9;
+        }
+
+        .card h3 {
+            margin: 0 0 8px 0;
+            font-size: 16px;
+        }
+
+        .card p {
+            margin: 0;
+            font-size: 20px;
+            font-weight: bold;
+        }
     </style>
 </head>
 <body>
 
 <h1>Smart Local Service App</h1>
+
+<div class="section">
+    <h2>Dashboard</h2>
+    <button onclick="loadDashboard()">Load Dashboard</button>
+
+    <div class="dashboard">
+        <div class="card"><h3>Total Requests</h3><p id="totalRequests">0</p></div>
+        <div class="card"><h3>Pending</h3><p id="pendingCount">0</p></div>
+        <div class="card"><h3>Accepted</h3><p id="acceptedCount">0</p></div>
+        <div class="card"><h3>Completed</h3><p id="completedCount">0</p></div>
+        <div class="card"><h3>Available Providers</h3><p id="availableCount">0</p></div>
+        <div class="card"><h3>Busy Providers</h3><p id="busyCount">0</p></div>
+    </div>
+</div>
 
 <div class="section">
     <h2>Create Service Request</h2>
@@ -115,6 +155,7 @@
             .then(function() {
                 alert("Request created successfully");
                 loadRequests();
+                loadDashboard();
             });
     }
 
@@ -158,6 +199,8 @@
 
                     targetList.appendChild(div);
                 });
+
+                document.getElementById('totalRequests').innerText = data.length;
             });
     }
 
@@ -170,6 +213,9 @@
                 document.getElementById('availableProviders').innerHTML = "";
                 document.getElementById('busyProviders').innerHTML = "";
 
+                let available = 0;
+                let busy = 0;
+
                 data.forEach(function(p) {
                     let div = document.createElement('div');
                     let cssClass = "provider-item";
@@ -178,9 +224,11 @@
                     if (p.status === "AVAILABLE") {
                         cssClass += " available";
                         targetList = document.getElementById('availableProviders');
+                        available++;
                     } else {
                         cssClass += " busy";
                         targetList = document.getElementById('busyProviders');
+                        busy++;
                     }
 
                     div.className = cssClass;
@@ -194,6 +242,49 @@
 
                     targetList.appendChild(div);
                 });
+
+                document.getElementById('availableCount').innerText = available;
+                document.getElementById('busyCount').innerText = busy;
+            });
+    }
+
+    function loadDashboard() {
+        fetch('http://localhost:8080/api/service/count')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                document.getElementById('pendingCount').innerText = data.PENDING || 0;
+                document.getElementById('acceptedCount').innerText = data.ACCEPTED || 0;
+                document.getElementById('completedCount').innerText = data.COMPLETED || 0;
+            });
+
+        fetch('http://localhost:8080/api/service/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                document.getElementById('totalRequests').innerText = data.length;
+            });
+
+        fetch('http://localhost:8080/api/provider/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                let available = 0;
+                let busy = 0;
+
+                data.forEach(function(p) {
+                    if (p.status === "AVAILABLE") {
+                        available++;
+                    } else {
+                        busy++;
+                    }
+                });
+
+                document.getElementById('availableCount').innerText = available;
+                document.getElementById('busyCount').innerText = busy;
             });
     }
 
@@ -203,6 +294,7 @@
         }).then(function() {
             loadRequests();
             loadProviders();
+            loadDashboard();
         });
     }
 
@@ -212,6 +304,7 @@
         }).then(function() {
             loadRequests();
             loadProviders();
+            loadDashboard();
         });
     }
 </script>
