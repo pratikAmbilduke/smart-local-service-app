@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service App</title>
+</head>
+<body>
+
+<h2>Create Service Request</h2>
+
+<input id="serviceType" placeholder="Service Type">
+<input id="location" placeholder="Location">
+<input id="lat" placeholder="Latitude">
+<input id="lng" placeholder="Longitude">
+<button onclick="createRequest()">Create</button>
+
+<h2>All Requests</h2>
+<button onclick="loadRequests()">Load Requests</button>
+
+<ul id="list"></ul>
+
+<script>
+    function createRequest() {
+        fetch('http://localhost:8080/api/service/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                serviceType: document.getElementById('serviceType').value,
+                location: document.getElementById('location').value,
+                latitude: parseFloat(document.getElementById('lat').value),
+                longitude: parseFloat(document.getElementById('lng').value)
+            })
+        }).then(() => alert("Created"));
+    }
+
+    function loadRequests() {
+        fetch('http://localhost:8080/api/service/all')
+            .then(res => res.json())
+            .then(data => {
+                let list = document.getElementById('list');
+                list.innerHTML = "";
+
+                data.forEach(r => {
+                    let li = document.createElement('li');
+                    li.innerHTML =
+                        r.id + " | " +
+                        r.serviceType + " | " +
+                        r.location + " | " +
+                        r.status +
+                        " <button onclick='accept(" + r.id + ")'>Accept</button>" +
+                        " <button onclick='complete(" + r.id + ")'>Complete</button>";
+
+                    list.appendChild(li);
+                });
+            });
+    }
+
+    function accept(id) {
+        fetch('http://localhost:8080/api/service/auto-assign/' + id, {
+            method: 'PUT'
+        }).then(loadRequests);
+    }
+
+    function complete(id) {
+        fetch('http://localhost:8080/api/service/complete/' + id, {
+            method: 'PUT'
+        }).then(loadRequests);
+    }
+</script>
+
+</body>
+</html>
