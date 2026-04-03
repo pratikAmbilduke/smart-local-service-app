@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Service Map</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
+    <style>
+        #map {
+            height: 500px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+
+<h2>Service Location Map</h2>
+<div id="map"></div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+
+<script>
+    var map = L.map('map').setView([19.455, 72.811], 12);
+
+    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+        attribution: '© OpenStreetMap'
+    }).addTo(map);
+
+    fetch('http://localhost:8080/api/service/all')
+        .then(function(response) {
+            return response.json();
+        })
+        .then(function(data) {
+            console.log("API Data:", data);
+
+            if (!data || data.length === 0) {
+                alert("No service requests found");
+                return;
+            }
+
+            data.forEach(function(item, index) {
+                var lat = 19.455 + (index * 0.01);
+                var lng = 72.811 + (index * 0.01);
+
+                L.circleMarker([lat, lng], {
+                    radius: 10
+                }).addTo(map)
+                    .bindPopup(
+                        "Service: " + item.serviceType + "<br>" +
+                        "Location: " + item.location + "<br>" +
+                        "Status: " + item.status
+                    );
+            });
+        })
+        .catch(function(error) {
+            console.log("Fetch Error:", error);
+            alert("Could not load API data");
+        });
+</script>
+
+</body>
+</html>
