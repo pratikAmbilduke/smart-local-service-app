@@ -12,6 +12,7 @@ import com.project.smartapp.dto.RequestProviderResponse;
 import com.project.smartapp.entity.Provider;
 import com.project.smartapp.repository.ProviderRepository;
 
+
 import java.util.List;
 
 @CrossOrigin(origins = "http://localhost:63342")
@@ -94,8 +95,19 @@ public class ServiceRequestController {
 
         if (request != null) {
             request.setStatus("COMPLETED");
+
+            if (request.getProviderId() != null) {
+                Provider provider = providerRepository.findById(request.getProviderId()).orElse(null);
+
+                if (provider != null) {
+                    provider.setStatus("AVAILABLE");
+                    providerRepository.save(provider);
+                }
+            }
+
             ServiceRequest updated = repository.save(request);
             messagingTemplate.convertAndSend("/topic/requests", updated);
+
             return updated;
         }
 
@@ -134,5 +146,32 @@ public class ServiceRequestController {
         }
 
         return new RequestProviderResponse(request, provider);
+    }
+    @PutMapping("/auto-assign/{id}")
+    public ServiceRequest autoAssignProvider(@PathVariable Long id) {
+        ServiceRequest request = repository.findById(id).orElse(null);
+
+        if (request == null) {
+            return null;
+        }
+
+        Provider provider = providerRepository
+                .findFirstByServiceTypeAndStatus(request.getServiceType(), "AVAILABLE")
+                .orElse(null);
+
+        if (provider == null) {
+            return null;
+        }
+
+        request.setProviderId(provider.getId());
+        request.setStatus("ACCEPTED");
+
+        provider.setStatus("BUSY");
+        providerRepository.save(provider);
+
+        ServiceRequest updated = repository.save(request);
+        messagingTemplate.convertAndSend("/topic/requests", updated);
+
+        return updated;
     }
 }
