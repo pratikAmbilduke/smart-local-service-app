@@ -89,4 +89,8 @@ public class ServiceRequestController {
 
         return null;
     }
+    @GetMapping("/status/{status}")
+    public List<ServiceRequest> getRequestsByStatus(@PathVariable String status) {
+        return repository.findByStatus(status.toUpperCase());
+    }
 }
