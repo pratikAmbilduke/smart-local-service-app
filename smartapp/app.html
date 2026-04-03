@@ -65,9 +65,17 @@
 </div>
 
 <div class="section">
-    <h2>All Requests</h2>
+    <h2>Requests</h2>
     <button onclick="loadRequests()">Load Requests</button>
-    <div id="list"></div>
+
+    <h3>Pending Requests</h3>
+    <div id="pendingList"></div>
+
+    <h3>Accepted Requests</h3>
+    <div id="acceptedList"></div>
+
+    <h3>Completed Requests</h3>
+    <div id="completedList"></div>
 </div>
 
 <script>
@@ -97,19 +105,25 @@
                 return response.json();
             })
             .then(function(data) {
-                let list = document.getElementById('list');
-                list.innerHTML = "";
+                document.getElementById('pendingList').innerHTML = "";
+                document.getElementById('acceptedList').innerHTML = "";
+                document.getElementById('completedList').innerHTML = "";
 
                 data.forEach(function(r) {
                     let div = document.createElement('div');
 
                     let cssClass = "request-item";
+                    let targetList = null;
+
                     if (r.status === "PENDING") {
                         cssClass += " pending";
+                        targetList = document.getElementById('pendingList');
                     } else if (r.status === "ACCEPTED") {
                         cssClass += " accepted";
+                        targetList = document.getElementById('acceptedList');
                     } else if (r.status === "COMPLETED") {
                         cssClass += " completed";
+                        targetList = document.getElementById('completedList');
                     }
 
                     div.className = cssClass;
@@ -123,7 +137,7 @@
                         "<button onclick='accept(" + r.id + ")'>Accept</button>" +
                         "<button onclick='complete(" + r.id + ")'>Complete</button>";
 
-                    list.appendChild(div);
+                    targetList.appendChild(div);
                 });
             });
     }
