@@ -34,9 +34,11 @@
                 return;
             }
 
+            var bounds = [];
+
             data.forEach(function(item) {
                 if (item.latitude != null && item.longitude != null) {
-                    L.marker([item.latitude, item.longitude]).addTo(map)
+                    var marker = L.marker([item.latitude, item.longitude]).addTo(map)
                         .bindPopup(
                             "Service: " + item.serviceType + "<br>" +
                             "Location: " + item.location + "<br>" +
@@ -44,8 +46,14 @@
                             "Latitude: " + item.latitude + "<br>" +
                             "Longitude: " + item.longitude
                         );
+
+                    bounds.push([item.latitude, item.longitude]);
                 }
             });
+
+            if (bounds.length > 0) {
+                map.fitBounds(bounds);
+            }
         })
         .catch(function(error) {
             console.log("Fetch Error:", error);
