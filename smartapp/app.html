@@ -2,21 +2,73 @@
 <html>
 <head>
     <title>Service App</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 30px;
+        }
+
+        h2 {
+            margin-top: 30px;
+        }
+
+        input {
+            margin: 5px;
+            padding: 8px;
+            width: 180px;
+        }
+
+        button {
+            margin: 5px;
+            padding: 8px 12px;
+            cursor: pointer;
+        }
+
+        .section {
+            border: 1px solid #ccc;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .request-item {
+            margin: 10px 0;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+        }
+
+        .pending {
+            background-color: #fff8dc;
+        }
+
+        .accepted {
+            background-color: #e6f7ff;
+        }
+
+        .completed {
+            background-color: #e8f5e9;
+        }
+    </style>
 </head>
 <body>
 
-<h2>Create Service Request</h2>
+<h1>Smart Local Service App</h1>
 
-<input id="serviceType" placeholder="Service Type">
-<input id="location" placeholder="Location">
-<input id="lat" placeholder="Latitude">
-<input id="lng" placeholder="Longitude">
-<button onclick="createRequest()">Create</button>
+<div class="section">
+    <h2>Create Service Request</h2>
+    <input id="serviceType" placeholder="Service Type">
+    <input id="location" placeholder="Location">
+    <input id="lat" placeholder="Latitude">
+    <input id="lng" placeholder="Longitude">
+    <button onclick="createRequest()">Create</button>
+</div>
 
-<h2>All Requests</h2>
-<button onclick="loadRequests()">Load Requests</button>
-
-<ul id="list"></ul>
+<div class="section">
+    <h2>All Requests</h2>
+    <button onclick="loadRequests()">Load Requests</button>
+    <div id="list"></div>
+</div>
 
 <script>
     function createRequest() {
@@ -29,27 +81,49 @@
                 latitude: parseFloat(document.getElementById('lat').value),
                 longitude: parseFloat(document.getElementById('lng').value)
             })
-        }).then(() => alert("Created"));
+        })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function() {
+                alert("Request created successfully");
+                loadRequests();
+            });
     }
 
     function loadRequests() {
         fetch('http://localhost:8080/api/service/all')
-            .then(res => res.json())
-            .then(data => {
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
                 let list = document.getElementById('list');
                 list.innerHTML = "";
 
-                data.forEach(r => {
-                    let li = document.createElement('li');
-                    li.innerHTML =
-                        r.id + " | " +
-                        r.serviceType + " | " +
-                        r.location + " | " +
-                        r.status +
-                        " <button onclick='accept(" + r.id + ")'>Accept</button>" +
-                        " <button onclick='complete(" + r.id + ")'>Complete</button>";
+                data.forEach(function(r) {
+                    let div = document.createElement('div');
 
-                    list.appendChild(li);
+                    let cssClass = "request-item";
+                    if (r.status === "PENDING") {
+                        cssClass += " pending";
+                    } else if (r.status === "ACCEPTED") {
+                        cssClass += " accepted";
+                    } else if (r.status === "COMPLETED") {
+                        cssClass += " completed";
+                    }
+
+                    div.className = cssClass;
+
+                    div.innerHTML =
+                        "<b>ID:</b> " + r.id + "<br>" +
+                        "<b>Service:</b> " + r.serviceType + "<br>" +
+                        "<b>Location:</b> " + r.location + "<br>" +
+                        "<b>Status:</b> " + r.status + "<br>" +
+                        "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
+                        "<button onclick='accept(" + r.id + ")'>Accept</button>" +
+                        "<button onclick='complete(" + r.id + ")'>Complete</button>";
+
+                    list.appendChild(div);
                 });
             });
     }
@@ -57,13 +131,17 @@
     function accept(id) {
         fetch('http://localhost:8080/api/service/auto-assign/' + id, {
             method: 'PUT'
-        }).then(loadRequests);
+        }).then(function() {
+            loadRequests();
+        });
     }
 
     function complete(id) {
         fetch('http://localhost:8080/api/service/complete/' + id, {
             method: 'PUT'
-        }).then(loadRequests);
+        }).then(function() {
+            loadRequests();
+        });
     }
 </script>
 
