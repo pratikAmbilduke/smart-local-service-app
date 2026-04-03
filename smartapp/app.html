@@ -31,7 +31,7 @@
             border-radius: 8px;
         }
 
-        .request-item {
+        .request-item, .provider-item {
             margin: 10px 0;
             padding: 10px;
             border: 1px solid #ddd;
@@ -48,6 +48,14 @@
 
         .completed {
             background-color: #e8f5e9;
+        }
+
+        .available {
+            background-color: #e8f5e9;
+        }
+
+        .busy {
+            background-color: #ffeaea;
         }
     </style>
 </head>
@@ -76,6 +84,17 @@
 
     <h3>Completed Requests</h3>
     <div id="completedList"></div>
+</div>
+
+<div class="section">
+    <h2>Providers</h2>
+    <button onclick="loadProviders()">Load Providers</button>
+
+    <h3>Available Providers</h3>
+    <div id="availableProviders"></div>
+
+    <h3>Busy Providers</h3>
+    <div id="busyProviders"></div>
 </div>
 
 <script>
@@ -135,7 +154,43 @@
                         "<b>Status:</b> " + r.status + "<br>" +
                         "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
                         "<button onclick='accept(" + r.id + ")'>Accept</button>" +
-                        "<button onclick='complete(" + r.id + ")'>Complete</button>";
+                        "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
+
+                    targetList.appendChild(div);
+                });
+            });
+    }
+
+    function loadProviders() {
+        fetch('http://localhost:8080/api/provider/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                document.getElementById('availableProviders').innerHTML = "";
+                document.getElementById('busyProviders').innerHTML = "";
+
+                data.forEach(function(p) {
+                    let div = document.createElement('div');
+                    let cssClass = "provider-item";
+                    let targetList = null;
+
+                    if (p.status === "AVAILABLE") {
+                        cssClass += " available";
+                        targetList = document.getElementById('availableProviders');
+                    } else {
+                        cssClass += " busy";
+                        targetList = document.getElementById('busyProviders');
+                    }
+
+                    div.className = cssClass;
+
+                    div.innerHTML =
+                        "<b>ID:</b> " + p.id + "<br>" +
+                        "<b>Name:</b> " + p.name + "<br>" +
+                        "<b>Service:</b> " + p.serviceType + "<br>" +
+                        "<b>Phone:</b> " + p.phone + "<br>" +
+                        "<b>Status:</b> " + p.status;
 
                     targetList.appendChild(div);
                 });
@@ -147,14 +202,16 @@
             method: 'PUT'
         }).then(function() {
             loadRequests();
+            loadProviders();
         });
     }
 
-    function complete(id) {
+    function completeRequest(id) {
         fetch('http://localhost:8080/api/service/complete/' + id, {
             method: 'PUT'
         }).then(function() {
             loadRequests();
+            loadProviders();
         });
     }
 </script>
