@@ -18,7 +18,7 @@
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 
 <script>
-    var map = L.map('map').setView([19.455, 72.811], 12);
+    var map = L.map('map').setView([19.455, 72.811], 10);
 
     L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
         attribution: '© OpenStreetMap'
@@ -29,25 +29,22 @@
             return response.json();
         })
         .then(function(data) {
-            console.log("API Data:", data);
-
             if (!data || data.length === 0) {
                 alert("No service requests found");
                 return;
             }
 
-            data.forEach(function(item, index) {
-                var lat = 19.455 + (index * 0.01);
-                var lng = 72.811 + (index * 0.01);
-
-                L.circleMarker([lat, lng], {
-                    radius: 10
-                }).addTo(map)
-                    .bindPopup(
-                        "Service: " + item.serviceType + "<br>" +
-                        "Location: " + item.location + "<br>" +
-                        "Status: " + item.status
-                    );
+            data.forEach(function(item) {
+                if (item.latitude != null && item.longitude != null) {
+                    L.marker([item.latitude, item.longitude]).addTo(map)
+                        .bindPopup(
+                            "Service: " + item.serviceType + "<br>" +
+                            "Location: " + item.location + "<br>" +
+                            "Status: " + item.status + "<br>" +
+                            "Latitude: " + item.latitude + "<br>" +
+                            "Longitude: " + item.longitude
+                        );
+                }
             });
         })
         .catch(function(error) {

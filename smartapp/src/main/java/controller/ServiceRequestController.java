@@ -50,6 +50,15 @@ public class ServiceRequestController {
 
         return null;
     }
+    @DeleteMapping("/delete/{id}")
+    public String deleteRequest(@PathVariable Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return "Deleted successfully";
+        } else {
+            return "Request not found";
+        }
+    }
 
     @PutMapping("/complete/{id}")
     public ServiceRequest completeRequest(@PathVariable Long id) {
