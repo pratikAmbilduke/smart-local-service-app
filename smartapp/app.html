@@ -8,8 +8,8 @@
             margin: 30px;
         }
 
-        h2 {
-            margin-top: 30px;
+        h1, h2, h3 {
+            margin-top: 20px;
         }
 
         input {
@@ -113,6 +113,15 @@
 </div>
 
 <div class="section">
+    <h2>Create Provider</h2>
+    <input id="providerName" placeholder="Provider Name">
+    <input id="providerServiceType" placeholder="Service Type">
+    <input id="providerPhone" placeholder="Phone">
+    <input id="providerStatus" placeholder="Status (AVAILABLE/BUSY)">
+    <button onclick="createProvider()">Create Provider</button>
+</div>
+
+<div class="section">
     <h2>Requests</h2>
     <button onclick="loadRequests()">Load Requests</button>
 
@@ -156,6 +165,35 @@
                 alert("Request created successfully");
                 loadRequests();
                 loadDashboard();
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Request creation failed");
+            });
+    }
+
+    function createProvider() {
+        fetch('http://localhost:8080/api/provider/create', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                name: document.getElementById('providerName').value,
+                serviceType: document.getElementById('providerServiceType').value,
+                phone: document.getElementById('providerPhone').value,
+                status: document.getElementById('providerStatus').value
+            })
+        })
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function() {
+                alert("Provider created successfully");
+                loadProviders();
+                loadDashboard();
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Provider creation failed");
             });
     }
 
@@ -170,10 +208,9 @@
                 document.getElementById('completedList').innerHTML = "";
 
                 data.forEach(function(r) {
-                    let div = document.createElement('div');
-
-                    let cssClass = "request-item";
-                    let targetList = null;
+                    var div = document.createElement('div');
+                    var cssClass = "request-item";
+                    var targetList = null;
 
                     if (r.status === "PENDING") {
                         cssClass += " pending";
@@ -187,20 +224,25 @@
                     }
 
                     div.className = cssClass;
-
                     div.innerHTML =
                         "<b>ID:</b> " + r.id + "<br>" +
                         "<b>Service:</b> " + r.serviceType + "<br>" +
                         "<b>Location:</b> " + r.location + "<br>" +
                         "<b>Status:</b> " + r.status + "<br>" +
                         "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
-                        "<button onclick='accept(" + r.id + ")'>Accept</button>" +
+                        "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
                         "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
 
-                    targetList.appendChild(div);
+                    if (targetList) {
+                        targetList.appendChild(div);
+                    }
                 });
 
                 document.getElementById('totalRequests').innerText = data.length;
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Loading requests failed");
             });
     }
 
@@ -213,13 +255,13 @@
                 document.getElementById('availableProviders').innerHTML = "";
                 document.getElementById('busyProviders').innerHTML = "";
 
-                let available = 0;
-                let busy = 0;
+                var available = 0;
+                var busy = 0;
 
                 data.forEach(function(p) {
-                    let div = document.createElement('div');
-                    let cssClass = "provider-item";
-                    let targetList = null;
+                    var div = document.createElement('div');
+                    var cssClass = "provider-item";
+                    var targetList = null;
 
                     if (p.status === "AVAILABLE") {
                         cssClass += " available";
@@ -232,7 +274,6 @@
                     }
 
                     div.className = cssClass;
-
                     div.innerHTML =
                         "<b>ID:</b> " + p.id + "<br>" +
                         "<b>Name:</b> " + p.name + "<br>" +
@@ -240,11 +281,17 @@
                         "<b>Phone:</b> " + p.phone + "<br>" +
                         "<b>Status:</b> " + p.status;
 
-                    targetList.appendChild(div);
+                    if (targetList) {
+                        targetList.appendChild(div);
+                    }
                 });
 
                 document.getElementById('availableCount').innerText = available;
                 document.getElementById('busyCount').innerText = busy;
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Loading providers failed");
             });
     }
 
@@ -257,6 +304,9 @@
                 document.getElementById('pendingCount').innerText = data.PENDING || 0;
                 document.getElementById('acceptedCount').innerText = data.ACCEPTED || 0;
                 document.getElementById('completedCount').innerText = data.COMPLETED || 0;
+            })
+            .catch(function(error) {
+                console.log(error);
             });
 
         fetch('http://localhost:8080/api/service/all')
@@ -265,6 +315,9 @@
             })
             .then(function(data) {
                 document.getElementById('totalRequests').innerText = data.length;
+            })
+            .catch(function(error) {
+                console.log(error);
             });
 
         fetch('http://localhost:8080/api/provider/all')
@@ -272,8 +325,8 @@
                 return response.json();
             })
             .then(function(data) {
-                let available = 0;
-                let busy = 0;
+                var available = 0;
+                var busy = 0;
 
                 data.forEach(function(p) {
                     if (p.status === "AVAILABLE") {
@@ -285,28 +338,42 @@
 
                 document.getElementById('availableCount').innerText = available;
                 document.getElementById('busyCount').innerText = busy;
+            })
+            .catch(function(error) {
+                console.log(error);
             });
     }
 
-    function accept(id) {
+    function acceptRequest(id) {
         fetch('http://localhost:8080/api/service/auto-assign/' + id, {
             method: 'PUT'
-        }).then(function() {
-            loadRequests();
-            loadProviders();
-            loadDashboard();
-        });
+        })
+            .then(function() {
+                loadRequests();
+                loadProviders();
+                loadDashboard();
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Accept request failed");
+            });
     }
 
     function completeRequest(id) {
         fetch('http://localhost:8080/api/service/complete/' + id, {
             method: 'PUT'
-        }).then(function() {
-            loadRequests();
-            loadProviders();
-            loadDashboard();
-        });
+        })
+            .then(function() {
+                loadRequests();
+                loadProviders();
+                loadDashboard();
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Complete request failed");
+            });
     }
+
     window.onload = function() {
         loadDashboard();
         loadRequests();
