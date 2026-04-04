@@ -84,6 +84,7 @@
             font-weight: bold;
         }
     </style>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
 
@@ -179,6 +180,12 @@
     <div id="busyProviders"></div>
 </div>
 
+<div class="section">
+    <h2>Service Map</h2>
+    <div id="map" style="height: 500px; width: 100%;"></div>
+</div>
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
     function createRequest() {
         var serviceType = document.getElementById('serviceType').value.trim();
@@ -556,12 +563,59 @@
                 targetList.appendChild(div);
             }
         });
-    }   
+    }
 
+    var map;
+    var markersLayer;
+
+    function initMap() {
+        map = L.map('map').setView([19.455, 72.811], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        markersLayer = L.layerGroup().addTo(map);
+    }
+    function loadMapMarkers() {
+        markersLayer.clearLayers();
+
+        fetch('http://localhost:8080/api/service/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var bounds = [];
+
+                data.forEach(function(item) {
+                    if (item.latitude != null && item.longitude != null) {
+                        var marker = L.marker([item.latitude, item.longitude]).addTo(markersLayer)
+                            .bindPopup(
+                                "<b>Service:</b> " + item.serviceType + "<br>" +
+                                "<b>Location:</b> " + item.location + "<br>" +
+                                "<b>Status:</b> " + item.status
+                            );
+
+                        bounds.push([item.latitude, item.longitude]);
+                    }
+                });
+
+                if (bounds.length > 0) {
+                    map.fitBounds(bounds);
+                }
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Loading map markers failed");
+            });
+    }
     window.onload = function() {
+        initMap();
         loadDashboard();
         loadRequests();
         loadProviders();
+        loadMapMarkers();
+        loadMapMarkers();
     };
 
 </script>
