@@ -34,4 +34,14 @@ public class ProviderController {
     public List<Provider> getProvidersByStatus(@PathVariable String status) {
         return repository.findByStatus(status);
     }
+
+    @DeleteMapping("/delete/{id}")
+    public String deleteProvider(@PathVariable Long id) {
+        if (repository.existsById(id)) {
+            repository.deleteById(id);
+            return "Deleted successfully";
+        } else {
+            return "Provider not found";
+        }
+    }
 }

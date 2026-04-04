@@ -233,6 +233,7 @@
                         "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
                         "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
 
+
                     if (targetList) {
                         targetList.appendChild(div);
                     }
@@ -279,7 +280,8 @@
                         "<b>Name:</b> " + p.name + "<br>" +
                         "<b>Service:</b> " + p.serviceType + "<br>" +
                         "<b>Phone:</b> " + p.phone + "<br>" +
-                        "<b>Status:</b> " + p.status;
+                        "<b>Status:</b> " + p.status + "<br>" +
+                        "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
 
                     if (targetList) {
                         targetList.appendChild(div);
@@ -374,11 +376,40 @@
             });
     }
 
+    function deleteRequest(id) {
+        fetch('http://localhost:8080/api/service/delete/' + id, {
+            method: 'DELETE'
+        })
+            .then(function() {
+                loadRequests();
+                loadDashboard();
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Delete request failed");
+            });
+    }
+
+    function deleteProvider(id) {
+        fetch('http://localhost:8080/api/provider/delete/' + id, {
+            method: 'DELETE'
+        })
+            .then(function() {
+                loadProviders();
+                loadDashboard();
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Delete provider failed");
+            });
+    }
+
     window.onload = function() {
         loadDashboard();
         loadRequests();
         loadProviders();
     };
+
 </script>
 
 </body>
