@@ -104,6 +104,23 @@
 </div>
 
 <div class="section">
+    <h2>Filter Requests</h2>
+
+    <select id="filterStatus">
+        <option value="">Select Status</option>
+        <option value="PENDING">PENDING</option>
+        <option value="ACCEPTED">ACCEPTED</option>
+        <option value="COMPLETED">COMPLETED</option>
+    </select>
+
+    <input id="filterLocation" placeholder="Enter Location">
+
+    <button onclick="filterByStatus()">Filter by Status</button>
+    <button onclick="filterByLocation()">Filter by Location</button>
+    <button onclick="loadRequests()">Show All</button>
+</div>
+
+<div class="section">
     <h2>Create Service Request</h2>
     <select id="serviceType">
         <option value="">Select Service Type</option>
@@ -459,6 +476,87 @@
                 alert("Delete provider failed");
             });
     }
+
+    function filterByStatus() {
+        var status = document.getElementById('filterStatus').value;
+
+        if (status === "") {
+            alert("Please select a status");
+            return;
+        }
+
+        fetch('http://localhost:8080/api/service/status/' + status)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                displayFilteredRequests(data);
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Filter by status failed");
+            });
+    }
+
+    function filterByLocation() {
+        var location = document.getElementById('filterLocation').value.trim();
+
+        if (location === "") {
+            alert("Please enter a location");
+            return;
+        }
+
+        fetch('http://localhost:8080/api/service/location/' + location)
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                displayFilteredRequests(data);
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Filter by location failed");
+            });
+    }
+
+    function displayFilteredRequests(data) {
+        document.getElementById('pendingList').innerHTML = "";
+        document.getElementById('acceptedList').innerHTML = "";
+        document.getElementById('completedList').innerHTML = "";
+
+        data.forEach(function(r) {
+            var div = document.createElement('div');
+            var cssClass = "request-item";
+            var targetList = null;
+
+            if (r.status === "PENDING") {
+                cssClass += " pending";
+                targetList = document.getElementById('pendingList');
+            } else if (r.status === "ACCEPTED") {
+                cssClass += " accepted";
+                targetList = document.getElementById('acceptedList');
+            } else if (r.status === "COMPLETED") {
+                cssClass += " completed";
+                targetList = document.getElementById('completedList');
+            }
+
+            div.className = cssClass;
+
+            div.innerHTML =
+                "<b>ID:</b> " + r.id + "<br>" +
+                "<b>Service:</b> " + r.serviceType + "<br>" +
+                "<b>Location:</b> " + r.location + "<br>" +
+                "<b>Status:</b> " + r.status + "<br>" +
+                "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
+                "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
+                "<button onclick='completeRequest(" + r.id + ")'>Complete</button>" +
+                "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
+
+            if (targetList) {
+                targetList.appendChild(div);
+            }
+        });
+    }   
 
     window.onload = function() {
         loadDashboard();
