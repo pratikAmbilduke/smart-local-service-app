@@ -163,6 +163,12 @@
             })
             .then(function() {
                 alert("Request created successfully");
+
+                document.getElementById('serviceType').value = "";
+                document.getElementById('location').value = "";
+                document.getElementById('lat').value = "";
+                document.getElementById('lng').value = "";
+
                 loadRequests();
                 loadDashboard();
             })
@@ -188,6 +194,12 @@
             })
             .then(function() {
                 alert("Provider created successfully");
+
+                document.getElementById('providerName').value = "";
+                document.getElementById('providerServiceType').value = "";
+                document.getElementById('providerPhone').value = "";
+                document.getElementById('providerStatus').value = "";
+
                 loadProviders();
                 loadDashboard();
             })
