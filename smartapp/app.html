@@ -12,7 +12,7 @@
             margin-top: 20px;
         }
 
-        input {
+        input, select {
             margin: 5px;
             padding: 8px;
             width: 180px;
@@ -105,7 +105,13 @@
 
 <div class="section">
     <h2>Create Service Request</h2>
-    <input id="serviceType" placeholder="Service Type">
+    <select id="serviceType">
+        <option value="">Select Service Type</option>
+        <option value="Plumber">Plumber</option>
+        <option value="Electrician">Electrician</option>
+        <option value="Cleaner">Cleaner</option>
+        <option value="AC Repair">AC Repair</option>
+    </select>
     <input id="location" placeholder="Location">
     <input id="lat" placeholder="Latitude">
     <input id="lng" placeholder="Longitude">
@@ -115,9 +121,19 @@
 <div class="section">
     <h2>Create Provider</h2>
     <input id="providerName" placeholder="Provider Name">
-    <input id="providerServiceType" placeholder="Service Type">
+    <select id="providerServiceType">
+        <option value="">Select Service Type</option>
+        <option value="Plumber">Plumber</option>
+        <option value="Electrician">Electrician</option>
+        <option value="Cleaner">Cleaner</option>
+        <option value="AC Repair">AC Repair</option>
+    </select>
     <input id="providerPhone" placeholder="Phone">
-    <input id="providerStatus" placeholder="Status (AVAILABLE/BUSY)">
+    <select id="providerStatus">
+        <option value="">Select Status</option>
+        <option value="AVAILABLE">AVAILABLE</option>
+        <option value="BUSY">BUSY</option>
+    </select>
     <button onclick="createProvider()">Create Provider</button>
 </div>
 
