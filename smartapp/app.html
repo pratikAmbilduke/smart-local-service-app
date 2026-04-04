@@ -148,14 +148,24 @@
 
 <script>
     function createRequest() {
+        var serviceType = document.getElementById('serviceType').value.trim();
+        var location = document.getElementById('location').value.trim();
+        var latitude = document.getElementById('lat').value.trim();
+        var longitude = document.getElementById('lng').value.trim();
+
+        if (serviceType === "" || location === "" || latitude === "" || longitude === "") {
+            alert("Please fill all request fields");
+            return;
+        }
+
         fetch('http://localhost:8080/api/service/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                serviceType: document.getElementById('serviceType').value,
-                location: document.getElementById('location').value,
-                latitude: parseFloat(document.getElementById('lat').value),
-                longitude: parseFloat(document.getElementById('lng').value)
+                serviceType: serviceType,
+                location: location,
+                latitude: parseFloat(latitude),
+                longitude: parseFloat(longitude)
             })
         })
             .then(function(response) {
@@ -179,14 +189,24 @@
     }
 
     function createProvider() {
+        var providerName = document.getElementById('providerName').value.trim();
+        var providerServiceType = document.getElementById('providerServiceType').value.trim();
+        var providerPhone = document.getElementById('providerPhone').value.trim();
+        var providerStatus = document.getElementById('providerStatus').value.trim();
+
+        if (providerName === "" || providerServiceType === "" || providerPhone === "" || providerStatus === "") {
+            alert("Please fill all provider fields");
+            return;
+        }
+
         fetch('http://localhost:8080/api/provider/create', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                name: document.getElementById('providerName').value,
-                serviceType: document.getElementById('providerServiceType').value,
-                phone: document.getElementById('providerPhone').value,
-                status: document.getElementById('providerStatus').value
+                name: providerName,
+                serviceType: providerServiceType,
+                phone: providerPhone,
+                status: providerStatus
             })
         })
             .then(function(response) {
