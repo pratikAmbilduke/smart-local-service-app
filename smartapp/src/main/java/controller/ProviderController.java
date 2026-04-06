@@ -44,4 +44,20 @@ public class ProviderController {
             return "Provider not found";
         }
     }
+
+    @PutMapping("/update/{id}")
+    public Provider updateProvider(@PathVariable Long id, @RequestBody Provider updatedProvider) {
+        Provider existingProvider = repository.findById(id).orElse(null);
+
+        if (existingProvider != null) {
+            existingProvider.setName(updatedProvider.getName());
+            existingProvider.setServiceType(updatedProvider.getServiceType());
+            existingProvider.setPhone(updatedProvider.getPhone());
+            existingProvider.setStatus(updatedProvider.getStatus());
+
+            return repository.save(existingProvider);
+        }
+
+        return null;
+    }
 }

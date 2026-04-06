@@ -132,7 +132,6 @@
         <div class="section">
             <h2>Create Service Request</h2>
             <input type="hidden" id="requestId">
-
             <select id="serviceType">
                 <option value="">Select Service Type</option>
                 <option value="Plumber">Plumber</option>
@@ -149,6 +148,7 @@
 
 <div class="section">
     <h2>Create Provider</h2>
+    <input type="hidden" id="providerId">
     <input id="providerName" placeholder="Provider Name">
     <select id="providerServiceType">
         <option value="">Select Service Type</option>
@@ -163,7 +163,7 @@
         <option value="AVAILABLE">AVAILABLE</option>
         <option value="BUSY">BUSY</option>
     </select>
-    <button onclick="createProvider()">Create Provider</button>
+    <button onclick="saveProvider()">Save Provider</button>
 </div>
 
 <div class="section">
@@ -320,12 +320,14 @@
 
                     div.className = cssClass;
                     div.innerHTML =
-                        "<b>ID:</b> " + p.id + "<br>" +
-                        "<b>Name:</b> " + p.name + "<br>" +
-                        "<b>Service:</b> " + p.serviceType + "<br>" +
-                        "<b>Phone:</b> " + p.phone + "<br>" +
-                        "<b>Status:</b> " + p.status + "<br>" +
-                        "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
+                        div.innerHTML =
+                            "<b>ID:</b> " + p.id + "<br>" +
+                            "<b>Name:</b> " + p.name + "<br>" +
+                            "<b>Service:</b> " + p.serviceType + "<br>" +
+                            "<b>Phone:</b> " + p.phone + "<br>" +
+                            "<b>Status:</b> " + p.status + "<br>" +
+                            "<button onclick='editProvider(" + p.id + ", \"" + p.name + "\", \"" + p.serviceType + "\", \"" + p.phone + "\", \"" + p.status + "\")'>Update</button>" +
+                            "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
 
                     if (targetList) {
                         targetList.appendChild(div);
@@ -674,6 +676,82 @@
         document.getElementById('location').value = "";
         document.getElementById('lat').value = "";
         document.getElementById('lng').value = "";
+    }
+
+    function editProvider(id, name, serviceType, phone, status) {
+        document.getElementById('providerId').value = id;
+        document.getElementById('providerName').value = name;
+        document.getElementById('providerServiceType').value = serviceType;
+        document.getElementById('providerPhone').value = phone;
+        document.getElementById('providerStatus').value = status;
+    }
+
+    function saveProvider() {
+        var providerId = document.getElementById('providerId').value.trim();
+        var providerName = document.getElementById('providerName').value.trim();
+        var providerServiceType = document.getElementById('providerServiceType').value.trim();
+        var providerPhone = document.getElementById('providerPhone').value.trim();
+        var providerStatus = document.getElementById('providerStatus').value.trim();
+
+        if (providerName === "" || providerServiceType === "" || providerPhone === "" || providerStatus === "") {
+            alert("Please fill all provider fields");
+            return;
+        }
+
+        var providerData = {
+            name: providerName,
+            serviceType: providerServiceType,
+            phone: providerPhone,
+            status: providerStatus
+        };
+
+        if (providerId === "") {
+            fetch('http://localhost:8080/api/provider/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(providerData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Provider created successfully");
+                    clearProviderForm();
+                    loadProviders();
+                    loadDashboard();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Provider creation failed");
+                });
+        } else {
+            fetch('http://localhost:8080/api/provider/update/' + providerId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(providerData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Provider updated successfully");
+                    clearProviderForm();
+                    loadProviders();
+                    loadDashboard();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Provider update failed");
+                });
+        }
+    }
+
+    function clearProviderForm() {
+        document.getElementById('providerId').value = "";
+        document.getElementById('providerName').value = "";
+        document.getElementById('providerServiceType').value = "";
+        document.getElementById('providerPhone').value = "";
+        document.getElementById('providerStatus').value = "";
     }
     window.onload = function() {
         initMap();
