@@ -129,11 +129,22 @@
         <option value="Electrician">Electrician</option>
         <option value="Cleaner">Cleaner</option>
         <option value="AC Repair">AC Repair</option>
+        <div class="section">
+            <h2>Create Service Request</h2>
+            <input type="hidden" id="requestId">
+
+            <select id="serviceType">
+                <option value="">Select Service Type</option>
+                <option value="Plumber">Plumber</option>
+                <option value="Electrician">Electrician</option>
+                <option value="Cleaner">Cleaner</option>
+                <option value="AC Repair">AC Repair</option>
+            </select>
     </select>
     <input id="location" placeholder="Location">
     <input id="lat" placeholder="Latitude">
     <input id="lng" placeholder="Longitude">
-    <button onclick="createRequest()">Create</button>
+    <button onclick="saveRequest()">Save Request</button>
 </div>
 
 <div class="section">
@@ -187,48 +198,6 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-    function createRequest() {
-        var serviceType = document.getElementById('serviceType').value.trim();
-        var location = document.getElementById('location').value.trim();
-        var latitude = document.getElementById('lat').value.trim();
-        var longitude = document.getElementById('lng').value.trim();
-
-        if (serviceType === "" || location === "" || latitude === "" || longitude === "") {
-            alert("Please fill all request fields");
-            return;
-        }
-
-        fetch('http://localhost:8080/api/service/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                serviceType: serviceType.trim(),
-                location: location.trim(),
-                latitude: parseFloat(latitude),
-                longitude: parseFloat(longitude)
-            })
-        })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function() {
-                alert("Request created successfully");
-
-                document.getElementById('serviceType').value = "";
-                document.getElementById('location').value = "";
-                document.getElementById('lat').value = "";
-                document.getElementById('lng').value = "";
-
-                loadRequests();
-                loadDashboard();
-                loadMapMarkers();
-            })
-            .catch(function(error) {
-                console.log(error);
-                alert("Request creation failed");
-            });
-    }
-
     function createProvider() {
         var providerName = document.getElementById('providerName').value.trim();
         var providerServiceType = document.getElementById('providerServiceType').value.trim();
@@ -303,8 +272,10 @@
                         "<b>Location:</b> " + r.location + "<br>" +
                         "<b>Status:</b> " + r.status + "<br>" +
                         "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
+                        "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>" +
                         "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
-                        "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
+                        "<button onclick='completeRequest(" + r.id + ")'>Complete</button>" +
+                        "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
 
 
                     if (targetList) {
@@ -566,6 +537,7 @@
                 "<b>Location:</b> " + r.location + "<br>" +
                 "<b>Status:</b> " + r.status + "<br>" +
                 "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
+                "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>" +
                 "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
                 "<button onclick='completeRequest(" + r.id + ")'>Complete</button>" +
                 "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
@@ -623,6 +595,85 @@
                 console.log(error);
                 alert("Loading map markers failed");
             });
+    }
+
+    function editRequest(id, serviceType, location, latitude, longitude, status) {
+        document.getElementById('requestId').value = id;
+        document.getElementById('serviceType').value = serviceType;
+        document.getElementById('location').value = location;
+        document.getElementById('lat').value = latitude;
+        document.getElementById('lng').value = longitude;
+    }
+
+    function saveRequest() {
+        var requestId = document.getElementById('requestId').value.trim();
+        var serviceType = document.getElementById('serviceType').value.trim();
+        var location = document.getElementById('location').value.trim();
+        var latitude = document.getElementById('lat').value.trim();
+        var longitude = document.getElementById('lng').value.trim();
+
+        if (serviceType === "" || location === "" || latitude === "" || longitude === "") {
+            alert("Please fill all request fields");
+            return;
+        }
+
+        var requestData = {
+            serviceType: serviceType,
+            location: location,
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude),
+            status: "PENDING"
+        };
+
+        if (requestId === "") {
+            fetch('http://localhost:8080/api/service/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Request created successfully");
+                    clearRequestForm();
+                    loadRequests();
+                    loadDashboard();
+                    loadMapMarkers();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Request creation failed");
+                });
+        } else {
+            fetch('http://localhost:8080/api/service/update/' + requestId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Request updated successfully");
+                    clearRequestForm();
+                    loadRequests();
+                    loadDashboard();
+                    loadMapMarkers();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Request update failed");
+                });
+        }
+    }
+
+    function clearRequestForm() {
+        document.getElementById('requestId').value = "";
+        document.getElementById('serviceType').value = "";
+        document.getElementById('location').value = "";
+        document.getElementById('lat').value = "";
+        document.getElementById('lng').value = "";
     }
     window.onload = function() {
         initMap();
