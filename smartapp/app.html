@@ -123,22 +123,13 @@
 
 <div class="section">
     <h2>Create Service Request</h2>
+    <input type="hidden" id="requestId">
     <select id="serviceType">
         <option value="">Select Service Type</option>
         <option value="Plumber">Plumber</option>
         <option value="Electrician">Electrician</option>
         <option value="Cleaner">Cleaner</option>
         <option value="AC Repair">AC Repair</option>
-        <div class="section">
-            <h2>Create Service Request</h2>
-            <input type="hidden" id="requestId">
-            <select id="serviceType">
-                <option value="">Select Service Type</option>
-                <option value="Plumber">Plumber</option>
-                <option value="Electrician">Electrician</option>
-                <option value="Cleaner">Cleaner</option>
-                <option value="AC Repair">AC Repair</option>
-            </select>
     </select>
     <input id="location" placeholder="Location">
     <input id="lat" placeholder="Latitude">
@@ -267,6 +258,17 @@
                         targetList = document.getElementById('completedList');
                     }
 
+                    var actionButtons = "";
+
+                    if (r.status === "PENDING") {
+                        actionButtons += "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>";
+                    } else if (r.status === "ACCEPTED") {
+                        actionButtons += "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
+                    }
+
+                    actionButtons += "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
+                    actionButtons += "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>";
+
                     div.className = cssClass;
                     div.innerHTML =
                         "<b>ID:</b> " + r.id + "<br>" +
@@ -274,11 +276,7 @@
                         "<b>Location:</b> " + r.location + "<br>" +
                         "<b>Status:</b> " + r.status + "<br>" +
                         "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
-                        "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>" +
-                        "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
-                        "<button onclick='completeRequest(" + r.id + ")'>Complete</button>" +
-                        "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
-
+                        actionButtons;
 
                     if (targetList) {
                         targetList.appendChild(div);
@@ -533,36 +531,30 @@
                 targetList = document.getElementById('completedList');
             }
 
-            div.className = cssClass;
+            var actionButtons = "";
 
+            if (r.status === "PENDING") {
+                actionButtons += "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>";
+            } else if (r.status === "ACCEPTED") {
+                actionButtons += "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
+            }
+
+            actionButtons += "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
+            actionButtons += "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>";
+
+            div.className = cssClass;
             div.innerHTML =
                 "<b>ID:</b> " + r.id + "<br>" +
                 "<b>Service:</b> " + r.serviceType + "<br>" +
                 "<b>Location:</b> " + r.location + "<br>" +
                 "<b>Status:</b> " + r.status + "<br>" +
                 "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
-                "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>" +
-                "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>" +
-                "<button onclick='completeRequest(" + r.id + ")'>Complete</button>" +
-                "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
+                actionButtons;
 
             if (targetList) {
                 targetList.appendChild(div);
             }
         });
-    }
-
-    var map;
-    var markersLayer;
-
-    function initMap() {
-        map = L.map('map').setView([19.455, 72.811], 10);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap'
-        }).addTo(map);
-
-        markersLayer = L.layerGroup().addTo(map);
     }
     function loadMapMarkers() {
         markersLayer.clearLayers();
