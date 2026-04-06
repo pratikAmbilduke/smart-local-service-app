@@ -91,6 +91,9 @@
 <h1>Smart Local Service App</h1>
 
 <div id="messageBox" style="display:none; padding:10px; margin-bottom:15px; border-radius:5px;"></div>
+<div id="loadingBox" style="display:none; padding:10px; margin-bottom:15px; border-radius:5px; background:#fff3cd; color:#856404; border:1px solid #ffeeba;">
+    Loading...
+</div>
 
 <div class="section">
     <h2>Dashboard</h2>
@@ -281,16 +284,20 @@
             return;
         }
 
+        showLoading();
+
         fetch('http://localhost:8080/api/service/all')
             .then(function(response) {
                 return response.json();
             })
             .then(function(data) {
                 renderMarkers(data);
+                hideLoading();
             })
             .catch(function(error) {
                 console.log(error);
-                showMessage("Loading map markers failed");
+                hideLoading();
+                showMessage("Loading map markers failed", "error");
             });
     }
 
@@ -450,33 +457,38 @@
     }
 
     function loadRequests() {
+        showLoading();
+
         fetch('http://localhost:8080/api/service/all')
             .then(function(response) {
                 return response.json();
             })
             .then(function(data) {
-                return loadProviderDetailsForRequests(data).then(function() {
-                    displayFilteredRequests(data);
-                    document.getElementById('totalRequests').innerText = data.length;
-                });
+                displayFilteredRequests(data);
+                hideLoading();
             })
             .catch(function(error) {
                 console.log(error);
-                showMessage("Loading requests failed");
+                hideLoading();
+                showMessage("Loading requests failed", "error");
             });
     }
 
     function loadProviders() {
+        showLoading();
+
         fetch('http://localhost:8080/api/provider/all')
             .then(function(response) {
                 return response.json();
             })
             .then(function(data) {
-                displayProviders(data);   // 👈 THIS LINE IS IMPORTANT
+                displayProviders(data);
+                hideLoading();
             })
             .catch(function(error) {
                 console.log(error);
-                showMessage("Loading providers failed");
+                hideLoading();
+                showMessage("Loading providers failed", "error");
             });
     }
 
@@ -549,7 +561,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Accept request failed");
+                showMessage("Accept request failed");
             });
     }
 
