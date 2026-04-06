@@ -771,9 +771,32 @@
         });
     }
 
+    function addMapLegend() {
+        var legend = L.control({ position: 'bottomright' });
+
+        legend.onAdd = function() {
+            var div = L.DomUtil.create('div', 'info legend');
+
+            div.style.background = 'white';
+            div.style.padding = '10px';
+            div.style.border = '1px solid #ccc';
+            div.style.borderRadius = '5px';
+
+            div.innerHTML =
+                "<h4>Status Legend</h4>" +
+                "<div><span style='display:inline-block;width:12px;height:12px;background:orange;border-radius:50%;margin-right:8px;'></span>PENDING</div>" +
+                "<div><span style='display:inline-block;width:12px;height:12px;background:blue;border-radius:50%;margin-right:8px;'></span>ACCEPTED</div>" +
+                "<div><span style='display:inline-block;width:12px;height:12px;background:green;border-radius:50%;margin-right:8px;'></span>COMPLETED</div>";
+
+            return div;
+        };
+
+        legend.addTo(map);
+    }
+
     window.onload = function() {
         initMap();
-        loadDashboard();
+        addMapLegend();
         loadRequests();
         loadProviders();
         loadMapMarkers();
