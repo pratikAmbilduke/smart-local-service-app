@@ -155,8 +155,12 @@ public class ServiceRequestController {
             return null;
         }
 
-        Provider provider = providerRepository
-                .findFirstByServiceTypeAndStatus(request.getServiceType(), "AVAILABLE")
+        Provider provider = providerRepository.findAll()
+                .stream()
+                .filter(p -> p.getServiceType() != null && p.getStatus() != null)
+                .filter(p -> p.getServiceType().equalsIgnoreCase(request.getServiceType()))
+                .filter(p -> p.getStatus().equalsIgnoreCase("AVAILABLE"))
+                .findFirst()
                 .orElse(null);
 
         if (provider == null) {

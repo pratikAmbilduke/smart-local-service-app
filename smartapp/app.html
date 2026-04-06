@@ -202,8 +202,8 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                serviceType: serviceType,
-                location: location,
+                serviceType: serviceType.trim(),
+                location: location.trim(),
                 latitude: parseFloat(latitude),
                 longitude: parseFloat(longitude)
             })
@@ -244,10 +244,10 @@
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
-                name: providerName,
-                serviceType: providerServiceType,
-                phone: providerPhone,
-                status: providerStatus
+                name: providerName.trim(),
+                serviceType: providerServiceType.trim(),
+                phone: providerPhone.trim(),
+                status: providerStatus.trim()
             })
         })
             .then(function(response) {
