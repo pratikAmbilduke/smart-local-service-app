@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Service App</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -84,7 +85,6 @@
             font-weight: bold;
         }
     </style>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet/dist/leaflet.css" />
 </head>
 <body>
 
@@ -118,12 +118,14 @@
 
     <button onclick="filterByStatus()">Filter by Status</button>
     <button onclick="filterByLocation()">Filter by Location</button>
-    <button onclick="loadRequests()">Show All</button>
+    <button onclick="loadRequests(); loadMapMarkers();">Show All</button>
 </div>
 
 <div class="section">
     <h2>Create Service Request</h2>
+
     <input type="hidden" id="requestId">
+
     <select id="serviceType">
         <option value="">Select Service Type</option>
         <option value="Plumber">Plumber</option>
@@ -131,17 +133,21 @@
         <option value="Cleaner">Cleaner</option>
         <option value="AC Repair">AC Repair</option>
     </select>
+
     <input id="location" placeholder="Location">
     <input id="lat" placeholder="Latitude">
     <input id="lng" placeholder="Longitude">
+
     <button onclick="saveRequest()">Save Request</button>
     <button onclick="clearRequestForm()">Cancel</button>
 </div>
 
 <div class="section">
     <h2>Create Provider</h2>
+
     <input type="hidden" id="providerId">
     <input id="providerName" placeholder="Provider Name">
+
     <select id="providerServiceType">
         <option value="">Select Service Type</option>
         <option value="Plumber">Plumber</option>
@@ -149,12 +155,15 @@
         <option value="Cleaner">Cleaner</option>
         <option value="AC Repair">AC Repair</option>
     </select>
+
     <input id="providerPhone" placeholder="Phone">
+
     <select id="providerStatus">
         <option value="">Select Status</option>
         <option value="AVAILABLE">AVAILABLE</option>
         <option value="BUSY">BUSY</option>
     </select>
+
     <button onclick="saveProvider()">Save Provider</button>
     <button onclick="clearProviderForm()">Cancel</button>
 </div>
@@ -191,7 +200,172 @@
 
 <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
 <script>
-    function createProvider() {
+    var map;
+    var markersLayer;
+
+    function initMap() {
+        map = L.map('map').setView([19.455, 72.811], 10);
+
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap'
+        }).addTo(map);
+
+        markersLayer = L.layerGroup().addTo(map);
+    }
+
+    function renderMarkers(data) {
+        markersLayer.clearLayers();
+
+        data.forEach(function(item) {
+            if (item.latitude != null && item.longitude != null) {
+                var color = "gray";
+
+                if (item.status === "PENDING") {
+                    color = "orange";
+                } else if (item.status === "ACCEPTED") {
+                    color = "blue";
+                } else if (item.status === "COMPLETED") {
+                    color = "green";
+                }
+
+                L.circleMarker([item.latitude, item.longitude], {
+                    radius: 10,
+                    color: color,
+                    fillColor: color,
+                    fillOpacity: 0.8
+                })
+                    .addTo(markersLayer)
+                    .bindPopup(
+                        "<b>Service:</b> " + item.serviceType + "<br>" +
+                        "<b>Location:</b> " + item.location + "<br>" +
+                        "<b>Status:</b> " + item.status
+                    );
+            }
+        });
+    }
+
+    function loadMapMarkers(filteredData) {
+        if (!markersLayer) {
+            return;
+        }
+
+        markersLayer.clearLayers();
+
+        if (filteredData) {
+            renderMarkers(filteredData);
+            return;
+        }
+
+        fetch('http://localhost:8080/api/service/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                renderMarkers(data);
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Loading map markers failed");
+            });
+    }
+
+    function clearRequestForm() {
+        document.getElementById('requestId').value = "";
+        document.getElementById('serviceType').value = "";
+        document.getElementById('location').value = "";
+        document.getElementById('lat').value = "";
+        document.getElementById('lng').value = "";
+    }
+
+    function clearProviderForm() {
+        document.getElementById('providerId').value = "";
+        document.getElementById('providerName').value = "";
+        document.getElementById('providerServiceType').value = "";
+        document.getElementById('providerPhone').value = "";
+        document.getElementById('providerStatus').value = "";
+    }
+
+    function editRequest(id, serviceType, location, latitude, longitude, status) {
+        document.getElementById('requestId').value = id;
+        document.getElementById('serviceType').value = serviceType;
+        document.getElementById('location').value = location;
+        document.getElementById('lat').value = latitude;
+        document.getElementById('lng').value = longitude;
+    }
+
+    function saveRequest() {
+        var requestId = document.getElementById('requestId').value.trim();
+        var serviceType = document.getElementById('serviceType').value.trim();
+        var location = document.getElementById('location').value.trim();
+        var latitude = document.getElementById('lat').value.trim();
+        var longitude = document.getElementById('lng').value.trim();
+
+        if (serviceType === "" || location === "" || latitude === "" || longitude === "") {
+            alert("Please fill all request fields");
+            return;
+        }
+
+        var requestData = {
+            serviceType: serviceType,
+            location: location,
+            latitude: parseFloat(latitude),
+            longitude: parseFloat(longitude),
+            status: "PENDING"
+        };
+
+        if (requestId === "") {
+            fetch('http://localhost:8080/api/service/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Request created successfully");
+                    clearRequestForm();
+                    loadRequests();
+                    loadDashboard();
+                    loadMapMarkers();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Request creation failed");
+                });
+        } else {
+            fetch('http://localhost:8080/api/service/update/' + requestId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(requestData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Request updated successfully");
+                    clearRequestForm();
+                    loadRequests();
+                    loadDashboard();
+                    loadMapMarkers();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Request update failed");
+                });
+        }
+    }
+
+    function editProvider(id, name, serviceType, phone, status) {
+        document.getElementById('providerId').value = id;
+        document.getElementById('providerName').value = name;
+        document.getElementById('providerServiceType').value = serviceType;
+        document.getElementById('providerPhone').value = phone;
+        document.getElementById('providerStatus').value = status;
+    }
+
+    function saveProvider() {
+        var providerId = document.getElementById('providerId').value.trim();
         var providerName = document.getElementById('providerName').value.trim();
         var providerServiceType = document.getElementById('providerServiceType').value.trim();
         var providerPhone = document.getElementById('providerPhone').value.trim();
@@ -202,34 +376,52 @@
             return;
         }
 
-        fetch('http://localhost:8080/api/provider/create', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: providerName.trim(),
-                serviceType: providerServiceType.trim(),
-                phone: providerPhone.trim(),
-                status: providerStatus.trim()
-            })
-        })
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function() {
-                alert("Provider created successfully");
+        var providerData = {
+            name: providerName.trim(),
+            serviceType: providerServiceType.trim(),
+            phone: providerPhone.trim(),
+            status: providerStatus.trim()
+        };
 
-                document.getElementById('providerName').value = "";
-                document.getElementById('providerServiceType').value = "";
-                document.getElementById('providerPhone').value = "";
-                document.getElementById('providerStatus').value = "";
-
-                loadProviders();
-                loadDashboard();
+        if (providerId === "") {
+            fetch('http://localhost:8080/api/provider/create', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(providerData)
             })
-            .catch(function(error) {
-                console.log(error);
-                alert("Provider creation failed");
-            });
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Provider created successfully");
+                    clearProviderForm();
+                    loadProviders();
+                    loadDashboard();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Provider creation failed");
+                });
+        } else {
+            fetch('http://localhost:8080/api/provider/update/' + providerId, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(providerData)
+            })
+                .then(function(response) {
+                    return response.json();
+                })
+                .then(function() {
+                    alert("Provider updated successfully");
+                    clearProviderForm();
+                    loadProviders();
+                    loadDashboard();
+                })
+                .catch(function(error) {
+                    console.log(error);
+                    alert("Provider update failed");
+                });
+        }
     }
 
     function loadRequests() {
@@ -320,14 +512,13 @@
 
                     div.className = cssClass;
                     div.innerHTML =
-                        div.innerHTML =
-                            "<b>ID:</b> " + p.id + "<br>" +
-                            "<b>Name:</b> " + p.name + "<br>" +
-                            "<b>Service:</b> " + p.serviceType + "<br>" +
-                            "<b>Phone:</b> " + p.phone + "<br>" +
-                            "<b>Status:</b> " + p.status + "<br>" +
-                            "<button onclick='editProvider(" + p.id + ", \"" + p.name + "\", \"" + p.serviceType + "\", \"" + p.phone + "\", \"" + p.status + "\")'>Update</button>" +
-                            "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
+                        "<b>ID:</b> " + p.id + "<br>" +
+                        "<b>Name:</b> " + p.name + "<br>" +
+                        "<b>Service:</b> " + p.serviceType + "<br>" +
+                        "<b>Phone:</b> " + p.phone + "<br>" +
+                        "<b>Status:</b> " + p.status + "<br>" +
+                        "<button onclick='editProvider(" + p.id + ", \"" + p.name + "\", \"" + p.serviceType + "\", \"" + p.phone + "\", \"" + p.status + "\")'>Update</button>" +
+                        "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
 
                     if (targetList) {
                         targetList.appendChild(div);
@@ -415,6 +606,7 @@
                 alert("Accept request failed");
             });
     }
+
     function completeRequest(id) {
         fetch('http://localhost:8080/api/service/complete/' + id, {
             method: 'PUT'
@@ -468,48 +660,6 @@
             });
     }
 
-    function filterByStatus() {
-        var status = document.getElementById('filterStatus').value;
-
-        if (status === "") {
-            alert("Please select a status");
-            return;
-        }
-
-        fetch('http://localhost:8080/api/service/status/' + status)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                displayFilteredRequests(data);
-            })
-            .catch(function(error) {
-                console.log(error);
-                alert("Filter by status failed");
-            });
-    }
-
-    function filterByLocation() {
-        var location = document.getElementById('filterLocation').value.trim();
-
-        if (location === "") {
-            alert("Please enter a location");
-            return;
-        }
-
-        fetch('http://localhost:8080/api/service/location/' + location)
-            .then(function(response) {
-                return response.json();
-            })
-            .then(function(data) {
-                displayFilteredRequests(data);
-            })
-            .catch(function(error) {
-                console.log(error);
-                alert("Filter by location failed");
-            });
-    }
-
     function displayFilteredRequests(data) {
         document.getElementById('pendingList').innerHTML = "";
         document.getElementById('acceptedList').innerHTML = "";
@@ -556,197 +706,51 @@
             }
         });
     }
-    function loadMapMarkers() {
-        markersLayer.clearLayers();
 
-        fetch('http://localhost:8080/api/service/all')
+    function filterByStatus() {
+        var status = document.getElementById('filterStatus').value;
+
+        if (status === "") {
+            alert("Please select a status");
+            return;
+        }
+
+        fetch('http://localhost:8080/api/service/status/' + status)
             .then(function(response) {
                 return response.json();
             })
             .then(function(data) {
-                var bounds = [];
-
-                data.forEach(function(item) {
-                    if (
-                        item.latitude != null &&
-                        item.longitude != null &&
-                        item.status !== "COMPLETED"
-                    ) {
-                        L.marker([item.latitude, item.longitude]).addTo(markersLayer)
-                            .bindPopup(
-                                "<b>Service:</b> " + item.serviceType + "<br>" +
-                                "<b>Location:</b> " + item.location + "<br>" +
-                                "<b>Status:</b> " + item.status
-                            );
-
-                        bounds.push([item.latitude, item.longitude]);
-                    }
-                });
-
-                if (bounds.length > 0) {
-                    map.fitBounds(bounds);
-                }
+                displayFilteredRequests(data);
+                loadMapMarkers(data);
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Loading map markers failed");
+                alert("Filter by status failed");
             });
     }
 
-    function editRequest(id, serviceType, location, latitude, longitude, status) {
-        document.getElementById('requestId').value = id;
-        document.getElementById('serviceType').value = serviceType;
-        document.getElementById('location').value = location;
-        document.getElementById('lat').value = latitude;
-        document.getElementById('lng').value = longitude;
-    }
+    function filterByLocation() {
+        var location = document.getElementById('filterLocation').value.trim();
 
-    function saveRequest() {
-        var requestId = document.getElementById('requestId').value.trim();
-        var serviceType = document.getElementById('serviceType').value.trim();
-        var location = document.getElementById('location').value.trim();
-        var latitude = document.getElementById('lat').value.trim();
-        var longitude = document.getElementById('lng').value.trim();
-
-        if (serviceType === "" || location === "" || latitude === "" || longitude === "") {
-            alert("Please fill all request fields");
+        if (location === "") {
+            alert("Please enter a location");
             return;
         }
 
-        var requestData = {
-            serviceType: serviceType,
-            location: location,
-            latitude: parseFloat(latitude),
-            longitude: parseFloat(longitude),
-            status: "PENDING"
-        };
-
-        if (requestId === "") {
-            fetch('http://localhost:8080/api/service/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
+        fetch('http://localhost:8080/api/service/location/' + location)
+            .then(function(response) {
+                return response.json();
             })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function() {
-                    alert("Request created successfully");
-                    clearRequestForm();
-                    loadRequests();
-                    loadDashboard();
-                    loadMapMarkers();
-                })
-                .catch(function(error) {
-                    console.log(error);
-                    alert("Request creation failed");
-                });
-        } else {
-            fetch('http://localhost:8080/api/service/update/' + requestId, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(requestData)
+            .then(function(data) {
+                displayFilteredRequests(data);
+                loadMapMarkers(data);
             })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function() {
-                    alert("Request updated successfully");
-                    clearRequestForm();
-                    loadRequests();
-                    loadDashboard();
-                    loadMapMarkers();
-                })
-                .catch(function(error) {
-                    console.log(error);
-                    alert("Request update failed");
-                });
-        }
+            .catch(function(error) {
+                console.log(error);
+                alert("Filter by location failed");
+            });
     }
 
-    function clearRequestForm() {
-        document.getElementById('requestId').value = "";
-        document.getElementById('serviceType').value = "";
-        document.getElementById('location').value = "";
-        document.getElementById('lat').value = "";
-        document.getElementById('lng').value = "";
-    }
-
-    function editProvider(id, name, serviceType, phone, status) {
-        document.getElementById('providerId').value = id;
-        document.getElementById('providerName').value = name;
-        document.getElementById('providerServiceType').value = serviceType;
-        document.getElementById('providerPhone').value = phone;
-        document.getElementById('providerStatus').value = status;
-    }
-
-    function saveProvider() {
-        var providerId = document.getElementById('providerId').value.trim();
-        var providerName = document.getElementById('providerName').value.trim();
-        var providerServiceType = document.getElementById('providerServiceType').value.trim();
-        var providerPhone = document.getElementById('providerPhone').value.trim();
-        var providerStatus = document.getElementById('providerStatus').value.trim();
-
-        if (providerName === "" || providerServiceType === "" || providerPhone === "" || providerStatus === "") {
-            alert("Please fill all provider fields");
-            return;
-        }
-
-        var providerData = {
-            name: providerName,
-            serviceType: providerServiceType,
-            phone: providerPhone,
-            status: providerStatus
-        };
-
-        if (providerId === "") {
-            fetch('http://localhost:8080/api/provider/create', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(providerData)
-            })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function() {
-                    alert("Provider created successfully");
-                    clearProviderForm();
-                    loadProviders();
-                    loadDashboard();
-                })
-                .catch(function(error) {
-                    console.log(error);
-                    alert("Provider creation failed");
-                });
-        } else {
-            fetch('http://localhost:8080/api/provider/update/' + providerId, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(providerData)
-            })
-                .then(function(response) {
-                    return response.json();
-                })
-                .then(function() {
-                    alert("Provider updated successfully");
-                    clearProviderForm();
-                    loadProviders();
-                    loadDashboard();
-                })
-                .catch(function(error) {
-                    console.log(error);
-                    alert("Provider update failed");
-                });
-        }
-    }
-
-    function clearProviderForm() {
-        document.getElementById('providerId').value = "";
-        document.getElementById('providerName').value = "";
-        document.getElementById('providerServiceType').value = "";
-        document.getElementById('providerPhone').value = "";
-        document.getElementById('providerStatus').value = "";
-    }
     window.onload = function() {
         initMap();
         loadDashboard();
