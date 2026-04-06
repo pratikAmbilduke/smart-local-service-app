@@ -90,6 +90,8 @@
 
 <h1>Smart Local Service App</h1>
 
+<div id="messageBox" style="display:none; padding:10px; margin-bottom:15px; border-radius:5px;"></div>
+
 <div class="section">
     <h2>Dashboard</h2>
 
@@ -288,7 +290,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Loading map markers failed");
+                showMessage("Loading map markers failed");
             });
     }
 
@@ -324,7 +326,7 @@
         var longitude = document.getElementById('lng').value.trim();
 
         if (serviceType === "" || location === "" || latitude === "" || longitude === "") {
-            alert("Please fill all request fields");
+            showMessage("Please fill all request fields");
             return;
         }
 
@@ -346,7 +348,7 @@
                     return response.json();
                 })
                 .then(function() {
-                    alert("Request created successfully");
+                    showMessage("Request created successfully");
                     clearRequestForm();
                     loadRequests();
                     loadDashboard();
@@ -354,7 +356,7 @@
                 })
                 .catch(function(error) {
                     console.log(error);
-                    alert("Request creation failed");
+                    showMessage("Request creation failed");
                 });
         } else {
             fetch('http://localhost:8080/api/service/update/' + requestId, {
@@ -366,7 +368,7 @@
                     return response.json();
                 })
                 .then(function() {
-                    alert("Request updated successfully");
+                    showMessage("Request updated successfully");
                     clearRequestForm();
                     loadRequests();
                     loadDashboard();
@@ -374,7 +376,7 @@
                 })
                 .catch(function(error) {
                     console.log(error);
-                    alert("Request update failed");
+                    showMessage("Request update failed");
                 });
         }
     }
@@ -395,7 +397,7 @@
         var providerStatus = document.getElementById('providerStatus').value.trim();
 
         if (providerName === "" || providerServiceType === "" || providerPhone === "" || providerStatus === "") {
-            alert("Please fill all provider fields");
+            showMessage("Please fill all provider fields");
             return;
         }
 
@@ -416,14 +418,14 @@
                     return response.json();
                 })
                 .then(function() {
-                    alert("Provider created successfully");
+                    showMessage("Provider created successfully");
                     clearProviderForm();
                     loadProviders();
                     loadDashboard();
                 })
                 .catch(function(error) {
                     console.log(error);
-                    alert("Provider creation failed");
+                    showMessage("Provider creation failed");
                 });
         } else {
             fetch('http://localhost:8080/api/provider/update/' + providerId, {
@@ -442,7 +444,7 @@
                 })
                 .catch(function(error) {
                     console.log(error);
-                    alert("Provider update failed");
+                    showMessage("Provider update failed");
                 });
         }
     }
@@ -460,7 +462,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Loading requests failed");
+                showMessage("Loading requests failed");
             });
     }
 
@@ -474,7 +476,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Loading providers failed");
+                showMessage("Loading providers failed");
             });
     }
 
@@ -563,7 +565,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Complete request failed");
+                showMessage("Complete request failed");
             });
     }
 
@@ -582,7 +584,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Delete request failed");
+                showMessage("Delete request failed");
             });
     }
 
@@ -600,7 +602,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Delete provider failed");
+                showMessage("Delete provider failed");
             });
     }
 
@@ -656,7 +658,7 @@
         var status = document.getElementById('filterStatus').value;
 
         if (status === "") {
-            alert("Please select a status");
+            showMessage("Please select a status");
             return;
         }
 
@@ -670,7 +672,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Filter by status failed");
+                showMessage("Filter by status failed");
             });
     }
 
@@ -678,7 +680,7 @@
         var location = document.getElementById('filterLocation').value.trim();
 
         if (location === "") {
-            alert("Please enter a location");
+            showMessage("Please enter a location");
             return;
         }
 
@@ -692,7 +694,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Filter by location failed");
+                showMessage("Filter by location failed");
             });
     }
 
@@ -777,7 +779,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Provider search failed");
+                showMessage("Provider search failed");
             });
     }
 
@@ -792,7 +794,9 @@
             div.innerHTML =
                 "<b>Name:</b> " + p.name + "<br>" +
                 "<b>Service:</b> " + p.serviceType + "<br>" +
-                "<b>Status:</b> " + p.status;
+                "<b>Status:</b> " + p.status + "<br>" +
+                "<button onclick='editProvider(" + p.id + ", \"" + p.name + "\", \"" + p.serviceType + "\", \"" + p.phone + "\", \"" + p.status + "\")'>Update</button>" +
+                "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
 
             if (p.status === "AVAILABLE") {
                 document.getElementById('availableProviders').appendChild(div);
@@ -806,7 +810,7 @@
         var serviceType = document.getElementById('providerFilterServiceType').value.trim();
 
         if (serviceType === "") {
-            alert("Please select a service type");
+            showMessage("Please select a service type");
             return;
         }
 
@@ -823,7 +827,7 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Provider filter failed");
+                showMessage("Provider filter failed");
             });
     }
 
@@ -831,7 +835,7 @@
         var status = document.getElementById('providerFilterStatus').value.trim();
 
         if (status === "") {
-            alert("Please select a status");
+            showMessage("Please select a status");
             return;
         }
 
@@ -848,8 +852,28 @@
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Provider status filter failed");
+                showMessage("Provider status filter failed");
             });
+    }
+
+    function showMessage(text, type) {
+        var box = document.getElementById('messageBox');
+        box.innerText = text;
+        box.style.display = 'block';
+
+        if (type === "success") {
+            box.style.backgroundColor = "#d4edda";
+            box.style.color = "#155724";
+            box.style.border = "1px solid #c3e6cb";
+        } else {
+            box.style.backgroundColor = "#f8d7da";
+            box.style.color = "#721c24";
+            box.style.border = "1px solid #f5c6cb";
+        }
+
+        setTimeout(function() {
+            box.style.display = 'none';
+        }, 3000);
     }
 
     window.onload = function() {
