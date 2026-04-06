@@ -199,6 +199,14 @@
 
     <button onclick="filterProvidersByServiceType()">Filter Service Type</button>
 
+    <select id="providerFilterStatus">
+        <option value="">Select Status</option>
+        <option value="AVAILABLE">AVAILABLE</option>
+        <option value="BUSY">BUSY</option>
+    </select>
+
+    <button onclick="filterProvidersByStatus()">Filter Status</button>
+
     <h3>Available Providers</h3>
     <div id="availableProviders"></div>
 
@@ -818,6 +826,31 @@
             .catch(function(error) {
                 console.log(error);
                 alert("Provider filter failed");
+            });
+    }
+
+    function filterProvidersByStatus() {
+        var status = document.getElementById('providerFilterStatus').value.trim();
+
+        if (status === "") {
+            alert("Please select a status");
+            return;
+        }
+
+        fetch('http://localhost:8080/api/provider/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var filtered = data.filter(function(provider) {
+                    return provider.status === status;
+                });
+
+                displayProviders(filtered);
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Provider status filter failed");
             });
     }
 
