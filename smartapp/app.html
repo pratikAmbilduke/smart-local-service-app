@@ -204,6 +204,7 @@
 <script>
     var map;
     var markersLayer;
+    var providerDetailsMap = {};
 
     function initMap() {
         map = L.map('map').setView([19.455, 72.811], 10);
@@ -432,52 +433,10 @@
                 return response.json();
             })
             .then(function(data) {
-                document.getElementById('pendingList').innerHTML = "";
-                document.getElementById('acceptedList').innerHTML = "";
-                document.getElementById('completedList').innerHTML = "";
-
-                data.forEach(function(r) {
-                    var div = document.createElement('div');
-                    var cssClass = "request-item";
-                    var targetList = null;
-
-                    if (r.status === "PENDING") {
-                        cssClass += " pending";
-                        targetList = document.getElementById('pendingList');
-                    } else if (r.status === "ACCEPTED") {
-                        cssClass += " accepted";
-                        targetList = document.getElementById('acceptedList');
-                    } else if (r.status === "COMPLETED") {
-                        cssClass += " completed";
-                        targetList = document.getElementById('completedList');
-                    }
-
-                    var actionButtons = "";
-
-                    if (r.status === "PENDING") {
-                        actionButtons += "<button onclick='acceptRequest(" + r.id + ")'>Accept</button>";
-                    } else if (r.status === "ACCEPTED") {
-                        actionButtons += "<button onclick='completeRequest(" + r.id + ")'>Complete</button>";
-                    }
-
-                    actionButtons += "<button onclick='deleteRequest(" + r.id + ")'>Delete</button>";
-                    actionButtons += "<button onclick='editRequest(" + r.id + ", \"" + r.serviceType + "\", \"" + r.location + "\", " + r.latitude + ", " + r.longitude + ", \"" + r.status + "\")'>Update</button>";
-
-                    div.className = cssClass;
-                    div.innerHTML =
-                        "<b>ID:</b> " + r.id + "<br>" +
-                        "<b>Service:</b> " + r.serviceType + "<br>" +
-                        "<b>Location:</b> " + r.location + "<br>" +
-                        "<b>Status:</b> " + r.status + "<br>" +
-                        "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
-                        actionButtons;
-
-                    if (targetList) {
-                        targetList.appendChild(div);
-                    }
+                return loadProviderDetailsForRequests(data).then(function() {
+                    displayFilteredRequests(data);
+                    document.getElementById('totalRequests').innerText = data.length;
                 });
-
-                document.getElementById('totalRequests').innerText = data.length;
             })
             .catch(function(error) {
                 console.log(error);
@@ -700,7 +659,7 @@
                 "<b>Service:</b> " + r.serviceType + "<br>" +
                 "<b>Location:</b> " + r.location + "<br>" +
                 "<b>Status:</b> " + r.status + "<br>" +
-                "<b>Provider ID:</b> " + (r.providerId !== null ? r.providerId : "Not Assigned") + "<br>" +
+                "<b>Provider:</b> " + (providerDetailsMap[r.id] ? providerDetailsMap[r.id] : "Not Assigned") + "<br>" +
                 actionButtons;
 
             if (targetList) {
@@ -792,6 +751,28 @@
         };
 
         legend.addTo(map);
+    }
+
+    function loadProviderDetailsForRequests(requests) {
+        providerDetailsMap = {};
+
+        var promises = requests.map(function(r) {
+            if (r.providerId != null) {
+                return fetch('http://localhost:8080/api/service/details/' + r.id)
+                    .then(function(response) {
+                        return response.json();
+                    })
+                    .then(function(data) {
+                        if (data && data.provider) {
+                            providerDetailsMap[r.id] = data.provider.name;
+                        }
+                    });
+            } else {
+                return Promise.resolve();
+            }
+        });
+
+        return Promise.all(promises);
     }
 
     window.onload = function() {
