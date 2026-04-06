@@ -221,6 +221,7 @@
 
                 loadRequests();
                 loadDashboard();
+                loadMapMarkers();
             })
             .catch(function(error) {
                 console.log(error);
@@ -422,17 +423,25 @@
         fetch('http://localhost:8080/api/service/auto-assign/' + id, {
             method: 'PUT'
         })
-            .then(function() {
+            .then(function(response) {
+                return response.text();
+            })
+            .then(function(data) {
+                if (!data || data === "null") {
+                    alert("No matching available provider found");
+                    return;
+                }
+
                 loadRequests();
                 loadProviders();
                 loadDashboard();
+                loadMapMarkers();
             })
             .catch(function(error) {
                 console.log(error);
                 alert("Accept request failed");
             });
     }
-
     function completeRequest(id) {
         fetch('http://localhost:8080/api/service/complete/' + id, {
             method: 'PUT'
@@ -441,6 +450,7 @@
                 loadRequests();
                 loadProviders();
                 loadDashboard();
+                loadMapMarkers();
             })
             .catch(function(error) {
                 console.log(error);
@@ -459,6 +469,7 @@
             .then(function() {
                 loadRequests();
                 loadDashboard();
+                loadMapMarkers();
             })
             .catch(function(error) {
                 console.log(error);
@@ -588,8 +599,12 @@
                 var bounds = [];
 
                 data.forEach(function(item) {
-                    if (item.latitude != null && item.longitude != null) {
-                        var marker = L.marker([item.latitude, item.longitude]).addTo(markersLayer)
+                    if (
+                        item.latitude != null &&
+                        item.longitude != null &&
+                        item.status !== "COMPLETED"
+                    ) {
+                        L.marker([item.latitude, item.longitude]).addTo(markersLayer)
                             .bindPopup(
                                 "<b>Service:</b> " + item.serviceType + "<br>" +
                                 "<b>Location:</b> " + item.location + "<br>" +
@@ -615,9 +630,7 @@
         loadRequests();
         loadProviders();
         loadMapMarkers();
-        loadMapMarkers();
     };
-
 </script>
 
 </body>
