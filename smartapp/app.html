@@ -184,7 +184,10 @@
 
 <div class="section">
     <h2>Providers</h2>
-    <button onclick="loadProviders()">Load Providers</button>
+
+    <input id="providerSearch" placeholder="Search Provider Name">
+    <button onclick="searchProviders()">Search</button>
+    <button onclick="loadProviders()">Show All Providers</button>
 
     <h3>Available Providers</h3>
     <div id="availableProviders"></div>
@@ -451,44 +454,7 @@
                 return response.json();
             })
             .then(function(data) {
-                document.getElementById('availableProviders').innerHTML = "";
-                document.getElementById('busyProviders').innerHTML = "";
-
-                var available = 0;
-                var busy = 0;
-
-                data.forEach(function(p) {
-                    var div = document.createElement('div');
-                    var cssClass = "provider-item";
-                    var targetList = null;
-
-                    if (p.status === "AVAILABLE") {
-                        cssClass += " available";
-                        targetList = document.getElementById('availableProviders');
-                        available++;
-                    } else {
-                        cssClass += " busy";
-                        targetList = document.getElementById('busyProviders');
-                        busy++;
-                    }
-
-                    div.className = cssClass;
-                    div.innerHTML =
-                        "<b>ID:</b> " + p.id + "<br>" +
-                        "<b>Name:</b> " + p.name + "<br>" +
-                        "<b>Service:</b> " + p.serviceType + "<br>" +
-                        "<b>Phone:</b> " + p.phone + "<br>" +
-                        "<b>Status:</b> " + p.status + "<br>" +
-                        "<button onclick='editProvider(" + p.id + ", \"" + p.name + "\", \"" + p.serviceType + "\", \"" + p.phone + "\", \"" + p.status + "\")'>Update</button>" +
-                        "<button onclick='deleteProvider(" + p.id + ")'>Delete</button>";
-
-                    if (targetList) {
-                        targetList.appendChild(div);
-                    }
-                });
-
-                document.getElementById('availableCount').innerText = available;
-                document.getElementById('busyCount').innerText = busy;
+                displayProviders(data);   // 👈 THIS LINE IS IMPORTANT
             })
             .catch(function(error) {
                 console.log(error);
@@ -777,6 +743,67 @@
         });
 
         return Promise.all(promises);
+    }
+
+    function searchProviders() {
+        var searchText = document.getElementById('providerSearch').value.trim().toLowerCase();
+
+        fetch('http://localhost:8080/api/provider/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var filtered = data.filter(function(provider) {
+                    return provider.name.toLowerCase().includes(searchText);
+                });
+
+                displayProviders(filtered);
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Provider search failed");
+            });
+    }
+
+    function displayProviders(data) {
+        document.getElementById('availableProviders').innerHTML = "";
+        document.getElementById('busyProviders').innerHTML = "";
+
+        data.forEach(function(p) {
+            var div = document.createElement('div');
+            div.className = "provider-item";
+
+            div.innerHTML =
+                "<b>Name:</b> " + p.name + "<br>" +
+                "<b>Service:</b> " + p.serviceType + "<br>" +
+                "<b>Status:</b> " + p.status;
+
+            if (p.status === "AVAILABLE") {
+                document.getElementById('availableProviders').appendChild(div);
+            } else {
+                document.getElementById('busyProviders').appendChild(div);
+            }
+        });
+    }
+
+    function searchProviders() {
+        var searchText = document.getElementById('providerSearch').value.trim().toLowerCase();
+
+        fetch('http://localhost:8080/api/provider/all')
+            .then(function(response) {
+                return response.json();
+            })
+            .then(function(data) {
+                var filtered = data.filter(function(provider) {
+                    return provider.name.toLowerCase().includes(searchText);
+                });
+
+                displayProviders(filtered);
+            })
+            .catch(function(error) {
+                console.log(error);
+                alert("Provider search failed");
+            });
     }
 
     window.onload = function() {
