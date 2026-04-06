@@ -205,6 +205,7 @@
     var map;
     var markersLayer;
     var providerDetailsMap = {};
+    var providerPhoneMap = {};
 
     function initMap() {
         map = L.map('map').setView([19.455, 72.811], 10);
@@ -660,6 +661,7 @@
                 "<b>Location:</b> " + r.location + "<br>" +
                 "<b>Status:</b> " + r.status + "<br>" +
                 "<b>Provider:</b> " + (providerDetailsMap[r.id] ? providerDetailsMap[r.id] : "Not Assigned") + "<br>" +
+                "<b>Phone:</b> " + (providerPhoneMap[r.id] ? providerPhoneMap[r.id] : "-") + "<br>" +
                 actionButtons;
 
             if (targetList) {
@@ -755,6 +757,7 @@
 
     function loadProviderDetailsForRequests(requests) {
         providerDetailsMap = {};
+        providerPhoneMap = {};
 
         var promises = requests.map(function(r) {
             if (r.providerId != null) {
@@ -765,6 +768,7 @@
                     .then(function(data) {
                         if (data && data.provider) {
                             providerDetailsMap[r.id] = data.provider.name;
+                            providerPhoneMap[r.id] = data.provider.phone;
                         }
                     });
             } else {
