@@ -189,6 +189,16 @@
     <button onclick="searchProviders()">Search</button>
     <button onclick="loadProviders()">Show All Providers</button>
 
+    <select id="providerFilterServiceType">
+        <option value="">Select Service Type</option>
+        <option value="Plumber">Plumber</option>
+        <option value="Electrician">Electrician</option>
+        <option value="Cleaner">Cleaner</option>
+        <option value="AC Repair">AC Repair</option>
+    </select>
+
+    <button onclick="filterProvidersByServiceType()">Filter Service Type</button>
+
     <h3>Available Providers</h3>
     <div id="availableProviders"></div>
 
@@ -786,8 +796,13 @@
         });
     }
 
-    function searchProviders() {
-        var searchText = document.getElementById('providerSearch').value.trim().toLowerCase();
+    function filterProvidersByServiceType() {
+        var serviceType = document.getElementById('providerFilterServiceType').value.trim();
+
+        if (serviceType === "") {
+            alert("Please select a service type");
+            return;
+        }
 
         fetch('http://localhost:8080/api/provider/all')
             .then(function(response) {
@@ -795,14 +810,14 @@
             })
             .then(function(data) {
                 var filtered = data.filter(function(provider) {
-                    return provider.name.toLowerCase().includes(searchText);
+                    return provider.serviceType === serviceType;
                 });
 
                 displayProviders(filtered);
             })
             .catch(function(error) {
                 console.log(error);
-                alert("Provider search failed");
+                alert("Provider filter failed");
             });
     }
 
